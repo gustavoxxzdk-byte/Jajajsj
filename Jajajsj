@@ -1,0 +1,102 @@
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "TeleportMenu"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Menu
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 160, 0, 100)
+frame.Position = UDim2.new(0.5, -80, 0.5, -50)
+frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 15)
+corner.Parent = frame
+
+-- Função para criar botões
+local function criarBotao(nome, posicao)
+	local botao = Instance.new("TextButton")
+	botao.Size = UDim2.new(0, 130, 0, 35)
+	botao.Position = posicao
+	botao.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+	botao.TextColor3 = Color3.fromRGB(255, 255, 255)
+	botao.Text = nome
+	botao.TextSize = 16
+	botao.Font = Enum.Font.GothamBold
+	botao.Parent = frame
+
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 10)
+	c.Parent = botao
+
+	return botao
+end
+
+local salvar = criarBotao("Salvar", UDim2.new(0, 15, 0, 10))
+local tp = criarBotao("TP", UDim2.new(0, 15, 0, 55))
+
+local posicaoSalva = nil
+
+-- Salvar posição
+salvar.MouseButton1Click:Connect(function()
+	local character = player.Character
+	if character and character:FindFirstChild("HumanoidRootPart") then
+		posicaoSalva = character.HumanoidRootPart.CFrame
+		salvar.Text = "Salvo!"
+		task.wait(0.7)
+		salvar.Text = "Salvar"
+	end
+end)
+
+-- Teleportar para posição salva
+tp.MouseButton1Click:Connect(function()
+	local character = player.Character
+	if character and character:FindFirstChild("HumanoidRootPart") and posicaoSalva then
+		character.HumanoidRootPart.CFrame = posicaoSalva
+	end
+end)
+
+-- Arrastar o menu
+local UserInputService = game:GetService("UserInputService")
+
+local arrastando = false
+local inicio
+local posicaoInicial
+
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+
+		arrastando = true
+		inicio = input.Position
+		posicaoInicial = frame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				arrastando = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if arrastando and
+		(input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch) then
+
+		local delta = input.Position - inicio
+
+		frame.Position = UDim2.new(
+			posicaoInicial.X.Scale,
+			posicaoInicial.X.Offset + delta.X,
+			posicaoInicial.Y.Scale,
+			posicaoInicial.Y.Offset + delta.Y
+		)
+	end
+end)
